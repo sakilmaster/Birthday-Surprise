@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday My Love!</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;600&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #ff4d6d;
+            --secondary: #ff85a1;
+            --bg: #fff0f3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            text-align: center;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .section:not(#balloon-page) {
+            transform: scale(0.95);
+            opacity: 0.7;
+        }
+
+        .section.in-view:not(#balloon-page) {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        #balloon-page {
+            clip-path: inset(0 0 100% 0);
+            transform: scale(0.85);
+            transition: clip-path 1.2s ease, transform 1.2s ease, opacity 0.8s ease;
+            opacity: 0;
+            background: #ffe5ec;
+        }
+
+        #balloon-page.in-view {
+            clip-path: inset(0 0 0% 0);
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        #custom-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            z-index: 5000;
+            text-align: center;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 85%;
+            max-width: 400px;
+        }
+
+        #custom-alert.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .alert-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            margin-top: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .alert-btn:hover {
+            transform: scale(1.05);
+        }
+
+        #lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff4d6d, #4b0082);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .timer {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        #main-content {
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+        }
+
+        #main-content.visible {
+            opacity: 1;
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.5rem;
+            color: var(--primary);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- ADVANCED QUIZ & GALLERY STYLES --- */
+        .quiz-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .quiz-input {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid var(--secondary);
+            border-radius: 10px;
+            text-align: center;
+            outline: none;
+        }
+
+        .error-msg {
+            color: var(--primary);
+            font-weight: bold;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+            min-height: 350px;
+            transition: all 0.5s ease;
+        }
+
+        .gift-container {
+            width: 250px;
+            height: 300px;
+            position: relative;
+            perspective: 1000px;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Entry animation for final reveal */
+        .gift-entry {
+            animation: slideFromLeft 0.8s forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideFromLeft {
+            from {
+                transform: translateX(-100vw) rotate(-20deg);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .gift-box {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            z-index: 2;
+            transition: 0.6s;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: 4px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        .opened .gift-box {
+            transform: translateY(-110%) rotateX(90deg);
+            opacity: 0;
+        }
+
+        .photo-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            padding: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transform: scale(0.8);
+            transition: 0.5s;
+            border-bottom: 20px solid white;
+            opacity: 0;
+        }
+
+        .opened .photo-card {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+        }
+
+        .finish-arrow {
+            font-size: 3rem;
+            color: var(--primary);
+            cursor: pointer;
+            margin-top: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* --- Memory Game & Balloons --- */
+        .memory-game {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .memory-card {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: transparent;
+            transition: 0.3s;
+        }
+
+        .memory-card.flipped {
+            background: white;
+            color: black;
+            border: 2px solid var(--primary);
+        }
+
+        #balloon-container-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .balloon {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            border-radius: 50%;
+            cursor: pointer;
+            pointer-events: auto;
+            animation: floatUp 5s linear forwards;
+            box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes floatUp {
+            0% {
+                bottom: -100px;
+                opacity: 1;
+            }
+
+            100% {
+                bottom: 110%;
+                opacity: 0;
+            }
+        }
+
+        .pop-text {
+            position: fixed;
+            pointer-events: none;
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.2rem;
+            color: var(--primary);
+            z-index: 10000;
+            animation: textFadeUp 1.5s ease-out forwards;
+        }
+
+        @keyframes textFadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0.5);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateY(-40px) scale(1.2);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(1.5);
+            }
+        }
+
+        .scratch-container {
+            position: relative;
+            width: 300px;
+            height: 150px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        #scratch-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+            z-index: 2;
+        }
+
+        .btn-music {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            z-index: 100;
+            border: none;
+            cursor: pointer;
+        }
+
+        .download-btn {
+            background: #ff4d6d;
+            color: white;
+            padding: 15px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="custom-alert">
+        <h2 id="alert-title">Happy Birthday!</h2>
+        <p id="alert-msg">Ready?</p>
+        <button class="alert-btn" onclick="celebrateAndClose()">YES ❤️</button>
+    </div>
+
+    <div id="lock-screen" ondblclick="unlockEverything()">
+        <h2>Surprise Unlocks In...</h2>
+        <div class="timer" id="countdown">Loading...</div>
+        <p>Feb 9, 2026 @ 11:00 AM</p>
+    </div>
+
+    <div id="main-content" class="hidden">
+        <button class="btn-music" onclick="toggleMusic()">🎵</button>
+        <audio id="bgMusic" loop>
+            <source src="https://www.bensound.com/bensound-music/bensound-love.mp3" type="audio/mpeg">
+        </audio>
+
+        <section class="section">
+            <h1 style="font-size: 4rem;">Happy Birthday, My Everything! 👸</h1>
+            <p>I have so many names for you... Find them all!</p>
+            <p style="margin-top: 50px; opacity: 0.6;">Scroll down slowly to explore</p>
+        </section>
+
+        <section class="section">
+            <h2>Let's Play A Game! 🧩</h2>
+            <p>Match the love cards to proceed.</p>
+            <div class="memory-game" id="memory-game"></div>
+        </section>
+
+        <section class="section" id="memory-section">
+            <h2 id="memory-title">Our Timeless Memories ✨</h2>
+
+            <div id="quiz-area" class="quiz-container">
+                <p id="quiz-question">Question 1: Namaku pidicha place ethu?</p>
+                <input type="text" id="quiz-answer" class="quiz-input" placeholder="Type here...">
+                <button class="alert-btn" id="quiz-btn" onclick="checkQuiz()">Unlock Gift</button>
+                <p id="quiz-error" class="error-msg">Ena ithu thrlaiya pakki? Try again! 😂</p>
+            </div>
+
+            <div id="gallery-area" class="gallery">
+                <div id="gift-1" class="gift-container hidden">
+                    <div class="gift-box">🎁</div>
+                    <div class="photo-card"><img src="./src/img/img1.png" alt="1">
+                        <p>Sweet Heart</p>
+                    </div>
+                </div>
+                <div id="gift-2" class="gift-container hidden">
+                    <div class="gift-box">🎁</div>
+                    <div class="photo-card"><img src="./src/img/img2.png" alt="2">
+                        <p>Best Day</p>
+                    </div>
+                </div>
+                <div id="gift-3" class="gift-container hidden">
+                    <div class="gift-box">🎁</div>
+                    <div class="photo-card"><img src="./src/img/img3.png" alt="3">
+                        <p>Forever</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="finish-area" class="hidden">
+                <p>Ellam memories-um pathachaa? ❤️</p>
+                <div class="finish-arrow" onclick="finalReveal()">➔ Click to Finish</div>
+            </div>
+        </section>
+
+        <section class="section" id="balloon-page">
+            <div id="balloon-container-page"></div>
+            <h1 style="margin-bottom: 20px;">Pop the Balloons! 🎈</h1>
+            <p>Reveal my hidden feelings for you...</p>
+            <div style="height: 200px;"></div>
+        </section>
+
+        <section class="section">
+            <h1>The Final Surprise 🎁</h1>
+            <p>Scratch the card to get your Manga Story!</p>
+            <div class="scratch-container">
+                <div
+                    style="position:absolute; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <a href="./src/download/A-Quite-Place-Called-You.pdf" download class="download-btn">📥 Download
+                        Manga</a>
+                </div>
+                <canvas id="scratch-canvas" width="300" height="150"></canvas>
+            </div>
+            <h2 style="margin-top:40px;">Forever & Always ❤️</h2>
+        </section>
+    </div>
+
+    <script>
+        // --- QUIZ & REVEAL LOGIC ---
+        let currentStep = 1;
+        const quizData = [
+            { q: "Enaku pudicha color ena azhagiii ?", a: "orange" },
+            { q: "Namma trust pandra god ah enanu soluvom di mailuu ?", a: "universe" },
+            { q: "Namma first meet yentha month di sakkara  ?", a: "dairy milk" }
+        ];
+
+        function checkQuiz() {
+            const input = document.getElementById('quiz-answer');
+            const answer = input.value.toLowerCase().trim();
+            const error = document.getElementById('quiz-error');
+            const target = quizData[currentStep - 1];
+
+            if (answer === target.a) {
+                input.value = "";
+                revealMemory(currentStep);
+            } else {
+                error.style.display = 'block';
+                setTimeout(() => { error.style.display = 'none'; }, 2000);
+            }
+        }
+
+        function revealMemory(step) {
+            // Hide Quiz
+            document.getElementById('quiz-area').classList.add('hidden');
+
+            // Show and Open specific gift
+            const gift = document.getElementById(`gift-${step}`);
+            gift.classList.remove('hidden');
+            setTimeout(() => { gift.classList.add('opened'); }, 100);
+
+            // Confetti
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
+            // Show "Next" button after delay
+            setTimeout(() => {
+                if (currentStep < 3) {
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = "alert-btn";
+                    nextBtn.innerText = "Next Quiz Box ➔";
+                    nextBtn.onclick = () => {
+                        currentStep++;
+                        gift.classList.add('hidden'); // Disappear current
+                        setupNextQuiz();
+                        nextBtn.remove();
+                    };
+                    document.getElementById('memory-section').appendChild(nextBtn);
+                } else {
+                    document.getElementById('finish-area').classList.remove('hidden');
+                }
+            }, 1500);
+        }
+
+        function setupNextQuiz() {
+            const quizArea = document.getElementById('quiz-area');
+            const question = document.getElementById('quiz-question');
+            question.innerText = `Question ${currentStep}: ${quizData[currentStep - 1].q}`;
+            quizArea.classList.remove('hidden');
+        }
+
+        function finalReveal() {
+            const memorySection = document.getElementById('memory-section');
+            const gallery = document.getElementById('gallery-area');
+
+            // Fade out current content
+            memorySection.style.opacity = '0';
+
+            setTimeout(() => {
+                // Reset Gallery
+                document.getElementById('finish-area').classList.add('hidden');
+                document.getElementById('quiz-area').classList.add('hidden');
+                gallery.innerHTML = '';
+                gallery.classList.remove('hidden');
+
+                // Add gifts with entry animation
+                for (let i = 1; i <= 3; i++) {
+                    const g = document.createElement('div');
+                    g.className = `gift-container gift-entry`;
+                    g.style.animationDelay = `${i * 0.3}s`;
+                    g.innerHTML = `
+                        <div class="gift-box">🎁</div>
+                        <div class="photo-card">
+                            <img src="https://via.placeholder.com/250x220?text=Memory+${i}" alt="${i}">
+                            <p>Memory ${i}</p>
+                        </div>
+                    `;
+                    gallery.appendChild(g);
+
+                    // Auto open after entry
+                    setTimeout(() => {
+                        g.classList.add('opened');
+                        confetti({ particleCount: 30, origin: { x: Math.random() } });
+                    }, (i * 300) + 1000);
+                }
+
+                memorySection.style.opacity = '1';
+                document.getElementById('memory-title').innerText = "All Our Memories ❤️";
+            }, 800);
+        }
+
+        // --- EXISTING LOGIC (NO CHANGES) ---
+        const nicknames = ["pattu", "mailuuu", "chelloo", "thangoo", "sakkara", "papa", "kty ma babe", "honeyy", "mutta kanni", "kunduuu", "pattu kty", "chella kty", "azhaguu pulla", "thangapulla", "ammuni", "kunjiipenney", "azhagiii", "azhagii maa", "ammu maa", "sakkara katti"];
+        let balloonInterval;
+
+        function mainBlast() {
+            var end = Date.now() + (2 * 1000);
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        function showAlert(title, msg) {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-msg').innerText = msg;
+            document.getElementById('custom-alert').classList.add('active');
+        }
+
+        function celebrateAndClose() {
+            document.getElementById('custom-alert').classList.remove('active');
+            mainBlast();
+            document.getElementById('bgMusic').play();
+        }
+
+        function unlockEverything() {
+            document.getElementById('lock-screen').classList.add('hidden');
+            const main = document.getElementById('main-content');
+            main.classList.remove('hidden');
+            setTimeout(() => { main.classList.add('visible'); }, 100);
+            initMemoryGame();
+            initScratch();
+            initScrollObserver();
+            showAlert("Surprise!", "Happy Birthday Ammu! ❤️");
+        }
+
+        const target = new Date('February 9, 2026 11:00:00').getTime();
+        setInterval(() => {
+            const now = new Date().getTime();
+            const diff = target - now;
+            if (diff <= 0) { if (document.getElementById('main-content').classList.contains('hidden')) unlockEverything(); }
+            else {
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+                document.getElementById('countdown').innerText = `${h}h ${m}m ${s}s`;
+            }
+        }, 1000);
+
+        function initScrollObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('in-view');
+                        if (entry.target.id === 'balloon-page') startBalloons();
+                    } else {
+                        entry.target.classList.remove('in-view');
+                        if (entry.target.id === 'balloon-page') stopBalloons();
+                    }
+                });
+            }, { threshold: 0.45 });
+            document.querySelectorAll('.section').forEach(section => observer.observe(section));
+        }
+
+        function startBalloons() {
+            if (balloonInterval) return;
+            balloonInterval = setInterval(() => {
+                const container = document.getElementById('balloon-container-page');
+                const b = document.createElement('div');
+                b.className = 'balloon';
+                const name = nicknames[Math.floor(Math.random() * nicknames.length)];
+                b.style.left = Math.random() * 85 + '%';
+                b.style.backgroundColor = ['#ff4d6d', '#ff85a1', '#ffb1bd'][Math.floor(Math.random() * 3)];
+                b.onclick = (e) => {
+                    const txt = document.createElement('div');
+                    txt.className = 'pop-text';
+                    txt.innerText = name;
+                    txt.style.left = e.clientX + 'px';
+                    txt.style.top = e.clientY + 'px';
+                    document.body.appendChild(txt);
+                    confetti({ particleCount: 15, origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight } });
+                    b.remove();
+                    setTimeout(() => txt.remove(), 1500);
+                };
+                container.appendChild(b);
+                setTimeout(() => b.remove(), 5000);
+            }, 800);
+        }
+
+        function stopBalloons() {
+            clearInterval(balloonInterval);
+            balloonInterval = null;
+            document.getElementById('balloon-container-page').innerHTML = '';
+        }
+
+        function initMemoryGame() {
+            const emojis = ['❤️', '💖', '💍', '❤️', '💖', '💍'];
+            let flipped = [], matched = 0;
+            const grid = document.getElementById('memory-game');
+            grid.innerHTML = '';
+            emojis.sort(() => Math.random() - 0.5).forEach((emoji) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.val = emoji;
+                card.innerText = emoji;
+                card.onclick = () => {
+                    if (flipped.length < 2 && !card.classList.contains('flipped')) {
+                        card.classList.add('flipped');
+                        flipped.push(card);
+                        if (flipped.length === 2) {
+                            if (flipped[0].dataset.val === flipped[1].dataset.val) {
+                                matched++; flipped = [];
+                                if (matched === 3) confetti();
+                            } else {
+                                setTimeout(() => { flipped.forEach(c => c.classList.remove('flipped')); flipped = []; }, 800);
+                            }
+                        }
+                    }
+                };
+                grid.appendChild(card);
+            });
+        }
+
+        function initScratch() {
+            const c = document.getElementById('scratch-canvas');
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0, 0, 300, 150);
+            ctx.fillStyle = '#444'; ctx.font = 'bold 16px Arial'; ctx.fillText('Scratch for Manga!', 80, 80);
+            const scratch = (e) => {
+                const rect = c.getBoundingClientRect();
+                const x = (e.clientX || (e.touches ? e.touches[0].clientX : 0)) - rect.left;
+                const y = (e.clientY || (e.touches ? e.touches[0].clientY : 0)) - rect.top;
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath(); ctx.arc(x, y, 25, 0, 6.28); ctx.fill();
+            };
+            c.addEventListener('mousemove', (e) => { if (e.buttons == 1) scratch(e); });
+            c.addEventListener('touchmove', (e) => { e.preventDefault(); scratch(e); });
+        }
+
+        function toggleMusic() { const m = document.getElementById('bgMusic'); m.paused ? m.play() : m.pause(); }
+    </script>
+</body>
+
+</html>
