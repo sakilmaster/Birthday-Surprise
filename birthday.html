@@ -442,10 +442,10 @@
         <button class="alert-btn" onclick="celebrateAndClose()">YES ❤️</button>
     </div>
 
-    <div id="lock-screen" ondblclick="unlockEverything()">
+    <div id="lock-screen">
         <h2>Surprise Unlocks In...</h2>
         <div class="timer" id="countdown">Loading...</div>
-        <p>Feb 9, 2026 @ 10:00 AM</p>
+        <p>Feb 9, 2026 @ 7:00 AM</p>
     </div>
 
     <div id="main-content" class="hidden">
@@ -662,7 +662,7 @@
             showAlert("Surprise!", "Happy Birthday Ammu! ❤️");
         }
 
-        const target = new Date('February 9, 2026 10:00:00').getTime();
+        const target = new Date('February 9, 2026 7:00:00').getTime();
         setInterval(() => {
             const now = new Date().getTime();
             const diff = target - now;
