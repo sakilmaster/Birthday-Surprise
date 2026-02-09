@@ -260,7 +260,7 @@
         .photo-card img {
             width: 100%;
             height: 220px;
-            object-fit: cover;
+            object-fit: contain;
         }
 
         .finish-arrow {
@@ -386,6 +386,19 @@
             background: white;
             border-radius: 15px;
             overflow: hidden;
+            user-select: none;
+        }
+
+        .scratch-content {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            /* Canvas-ku keela irukanum */
         }
 
         #scratch-canvas {
@@ -394,6 +407,7 @@
             left: 0;
             cursor: crosshair;
             z-index: 2;
+            touch-action: none;
         }
 
         .btn-music {
@@ -456,7 +470,7 @@
             <h2 id="memory-title">Our Timeless Memories ✨</h2>
 
             <div id="quiz-area" class="quiz-container">
-                <p id="quiz-question">Question 1: Namaku pidicha place ethu?</p>
+                <p id="quiz-question">Question 1: Enaku pudicha color ena azhagiii ?</p>
                 <input type="text" id="quiz-answer" class="quiz-input" placeholder="Type here...">
                 <button class="alert-btn" id="quiz-btn" onclick="checkQuiz()">Unlock Gift</button>
                 <p id="quiz-error" class="error-msg">Ena ithu thrlaiya pakki? Try again! 😂</p>
@@ -500,8 +514,7 @@
             <h1>The Final Surprise 🎁</h1>
             <p>Scratch the card to get your Manga Story!</p>
             <div class="scratch-container">
-                <div
-                    style="position:absolute; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div class="scratch-content">
                     <a href="./src/download/A-Quite-Place-Called-You.pdf" download class="download-btn">📥 Download
                         Manga</a>
                 </div>
@@ -517,7 +530,7 @@
         const quizData = [
             { q: "Enaku pudicha color ena azhagiii ?", a: "orange" },
             { q: "Namma trust pandra god ah enanu soluvom di mailuu ?", a: "universe" },
-            { q: "Namma first meet yentha month di sakkara  ?", a: "dairy milk" }
+            { q: "Namma first meet yentha month di sakkara ?", a: "august" }
         ];
 
         function checkQuiz() {
@@ -738,20 +751,61 @@
 
         function initScratch() {
             const c = document.getElementById('scratch-canvas');
-            const ctx = c.getContext('2d');
-            ctx.fillStyle = '#C0C0C0'; ctx.fillRect(0, 0, 300, 150);
-            ctx.fillStyle = '#444'; ctx.font = 'bold 16px Arial'; ctx.fillText('Scratch for Manga!', 80, 80);
+            const ctx = c.getContext('2d', { willReadFrequently: true }); // Performance boost
+
+            // Silver Layer
+            ctx.fillStyle = '#C0C0C0';
+            ctx.fillRect(0, 0, 300, 150);
+
+            // Text on Silver Layer
+            ctx.fillStyle = '#666';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Scratch for Surprise! 🎁', 150, 80);
+
             const scratch = (e) => {
                 const rect = c.getBoundingClientRect();
-                const x = (e.clientX || (e.touches ? e.touches[0].clientX : 0)) - rect.left;
-                const y = (e.clientY || (e.touches ? e.touches[0].clientY : 0)) - rect.top;
+                const clientX = (e.clientX || (e.touches ? e.touches[0].clientX : 0));
+                const clientY = (e.clientY || (e.touches ? e.touches[0].clientY : 0));
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+
                 ctx.globalCompositeOperation = 'destination-out';
-                ctx.beginPath(); ctx.arc(x, y, 25, 0, 6.28); ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Check percentage only every few scratches for performance
+                if (Math.random() > 0.9) {
+                    checkScratchPercentage(c, ctx);
+                }
             };
+
             c.addEventListener('mousemove', (e) => { if (e.buttons == 1) scratch(e); });
             c.addEventListener('touchmove', (e) => { e.preventDefault(); scratch(e); });
         }
+        function checkScratchPercentage(canvas, ctx) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            let transparentPixels = 0;
 
+            // Check every 4th pixel (alpha channel) to see if it's transparent
+            for (let i = 3; i < pixels.length; i += 4) {
+                if (pixels[i] === 0) transparentPixels++;
+            }
+
+            const percentage = (transparentPixels / (pixels.length / 4)) * 100;
+
+            // 45% scratch pannuna automatic-ah full-ah clear aagidum
+            if (percentage > 45) {
+                canvas.style.transition = 'opacity 1s ease';
+                canvas.style.opacity = '0';
+                setTimeout(() => {
+                    canvas.style.display = 'none';
+                    confetti({ particleCount: 150, spread: 100 });
+                }, 1000);
+            }
+        }
         function toggleMusic() { const m = document.getElementById('bgMusic'); m.paused ? m.play() : m.pause(); }
     </script>
 </body>
